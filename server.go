@@ -269,12 +269,12 @@ func (s *Server) amFiring(amMsg *template.Data) []error {
 		go s.instrument(fingerprint, cmd, env, out)
 	}
 
-	// Wait for instrumentation, error collection to finish
 	go func() {
 		defer wg.Done()
 		collectWg.Wait()
 		close(errors)
 	}()
+	// Wait for instrumentation, error collection to finish
 	wg.Wait()
 
 	return allErrors
