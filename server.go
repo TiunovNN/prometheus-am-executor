@@ -3,12 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/imgix/prometheus-am-executor/chanmap"
-	"github.com/imgix/prometheus-am-executor/countermap"
-	"github.com/prometheus/alertmanager/template"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	pm "github.com/prometheus/client_model/go"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -17,6 +11,13 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/imgix/prometheus-am-executor/chanmap"
+	"github.com/imgix/prometheus-am-executor/countermap"
+	"github.com/prometheus/alertmanager/template"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	pm "github.com/prometheus/client_model/go"
 )
 
 const (
@@ -221,11 +222,7 @@ func (s *Server) amFiring(amMsg *template.Data) []error {
 	var errors = make(chan error)
 	var allErrors = make([]error, 0)
 	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		collectWg.Wait()
-		close(errors)
-	}()
+
 	go func() {
 		defer wg.Done()
 		for err := range errors {
@@ -273,6 +270,11 @@ func (s *Server) amFiring(amMsg *template.Data) []error {
 	}
 
 	// Wait for instrumentation, error collection to finish
+	go func() {
+		defer wg.Done()
+		collectWg.Wait()
+		close(errors)
+	}()
 	wg.Wait()
 
 	return allErrors
